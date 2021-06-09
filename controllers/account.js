@@ -44,18 +44,21 @@ const createTransaction = async (req, res) => {
   } = req.body;
 
   const transactionId = uuid.v4();
+  
+  db.serialize(() => {
+    db.exec('BEGIN');
 
-  const sql = `BEGIN TRANSACTION;
-              UPDATE account_balance
-              SET balance = balance + ${amount}
-              WHERE account_id = "${accountId}";
+    db.exec(`UPDATE account_balance
+            SET balance = balance + ${amount}
+            WHERE account_id = "${accountId}";
+    `);
 
-              INSERT INTO transactions (id, account_id, amount)
-              VALUES ("${transactionId}", "${accountId}", ${amount})
-              COMMIT;
-  `;  
+    db.exec(`INSERT INTO transactions (id, account_id, amount)
+            VALUES ("${transactionId}", "${accountId}", ${amount})
+    `);
 
-  db.run(sql);
+    db.exec('COMMIT');
+  });
 
   res.send();
 };
