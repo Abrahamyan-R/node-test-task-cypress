@@ -1,6 +1,7 @@
 const {
   body,
   param,
+  header,
 } = require('express-validator');
 
 
@@ -12,7 +13,7 @@ const getBalanceByAccountIdValidator = [
 const getTransactionDetailsByIdValidator = [
   param('transactionId')
     .isUUID().withMessage('transaction id must be uuid')
-]
+];
 
 const createTransactionValidator = [
   body('accountId')
@@ -22,7 +23,11 @@ const createTransactionValidator = [
   body('amount')
     .exists().withMessage('amount is required')
     .isInt().withMessage('amount must be integer')
-    .toInt()
+    .toInt(),
+  header('transactionId')
+    .exists().withMessage('transaction id required')
+    .isString().withMessage('transaction id must be string')
+    .isUUID().withMessage('transaction id must be uuid')
 ];
 
 module.exports = {

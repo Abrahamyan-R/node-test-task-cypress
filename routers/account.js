@@ -1,7 +1,8 @@
 const express = require('express');
+const cors = require('cors');
 
 const { accountController } = require('../controllers');
-const { accountValidator } = require('../validators')
+const { accountValidator } = require('../validators');
 const { validateMiddleware } = require('../middlewares');
 
 
@@ -26,7 +27,11 @@ router.post(
   accountValidator.createTransactionValidator,
   validateMiddleware,
   accountController.createTransaction,
-);
+)
+
+router.all('/amount', (req, res) => {
+  res.status(405).send();
+});
 
 router.get(
   '/max-transaction-volume',

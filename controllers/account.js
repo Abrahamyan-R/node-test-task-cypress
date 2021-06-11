@@ -42,25 +42,35 @@ const createTransaction = async (req, res) => {
     accountId,
     amount,
   } = req.body;
-
-  const transactionId = uuid.v4();
+  const { transactionid: transactionId } = req.headers;
   
-  db.serialize(() => {
-    db.exec('BEGIN');
+  const sql = `
+    SELECT * FROM transactions
+    WHERE id = ?
+  `;
 
-    db.exec(`UPDATE account_balance
-            SET balance = balance + ${amount}
-            WHERE account_id = "${accountId}";
-    `);
+  db.get(sql, [transactionId], (err, row) => {
+    if (err) return res.status(500).json({ message: 'error' });
 
-    db.exec(`INSERT INTO transactions (id, account_id, amount)
-            VALUES ("${transactionId}", "${accountId}", ${amount})
-    `);
+    if (row) return res.status(200).json(row);
 
-    db.exec('COMMIT');
+    db.serialize(() => {
+      db.exec('BEGIN');
+  
+      db.exec(`UPDATE account_balance
+              SET balance = balance + ${amount}
+              WHERE account_id = "${accountId}";
+      `);
+  
+      db.exec(`INSERT INTO transactions (id, account_id, amount)
+              VALUES ("${transactionId}", "${accountId}", ${amount})
+      `);
+  
+      db.exec('COMMIT');
+    });
+  
+    res.send();
   });
-
-  res.send();
 };
 
 const getAccountsWithMaxTransactions = async (req, res) => {
